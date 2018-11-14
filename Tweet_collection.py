@@ -33,9 +33,25 @@ def collect():
     tweets = connexion.search("@EmmanuelMacron",language="french",rpp=50)
     for tweet in tweets:
         print(tweet.text)
-
+        
 print (collect())
-//On collecte les tweets des persones qui ont parlé de cet user_id, et en renvoient 200
+
+//on collecte les tweets avec des mots clés relatifs au nom du candidat 
+//ouvre les fichiers et renvoie les mots clés dans une liste
+//le numéro du candidat est utile comme l'user_id
+
+def get_candidate_queries(num_candidate,file_path):
+    connexion=twitter_setup
+    file_path = open("keywords_candidate_num_candidate.txt","hastag_candidate_num_candidate.txt", "r")
+    for words in file_path :
+        if user_id=14445328
+        tweets1= connexion.search("num_candidate") 
+        
+        print(tweets1)
+           
+
+
+//On collecte les tweets des personnes qui ont parlé de cet user_id, et en renvoient 200
 def collect_by_user(user_id):
     connexion = twitter_setup()
     statuses = connexion.user_timeline(id = user_id, count = 200)
@@ -43,7 +59,9 @@ def collect_by_user(user_id):
         print(status.text)
     return statuses
     
+
 print (collect_by_user(151304840))
+
 
 
 from tweepy.streaming import StreamListener
