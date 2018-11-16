@@ -108,43 +108,50 @@ def plot_rt(df):
 
 '''print(plot_rt(df))'''
 
-#Fonctionnalité 6 : visualisation de l'évolution d'une caractéristique
 
-'''Exemple:'''
-tfav = pd.Series(data=df['Likes'].values, index=df['Date'])
-tret = pd.Series(data=df['RTs'].values, index=df['Date'])
-
-# Likes vs retweets visualization:
-tfav.plot(figsize=(16,4), label="Likes", legend=True)
-tret.plot(figsize=(16,4), label="Retweets", legend=True)
-
-print(plt.show())
 
 #On compare le nombre de retweet des posts d'Emmanuel Macron et ceux d'Edouard Philippe
 
-#première fonction qui renvoie les tweets postés par Emmanuel Macron
+#première fonction qui renvoie les tweets postés par Emmanuel Macron & Edouard Philippe
 def collect_tweets_by_Macron():
     connexion = twitter_setup()
-    tweets = connexion.search(user = "EmmanuelMacron",language="fr",rpp=100)
-    data = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweet_textual_content'])
-    data['len']  = np.array([len(tweet.text) for tweet in tweets])
-    data['ID']   = np.array([tweet.id for tweet in tweets])
-    data['Date'] = np.array([tweet.created_at for tweet in tweets])
-    data['Source'] = np.array([tweet.source for tweet in tweets])
-    data['Likes']  = np.array([tweet.favorite_count for tweet in tweets])
-    data['RTs']    = np.array([tweet.retweet_count for tweet in tweets])
-    rt_max  = np.max(data['RTs'])
-    rt  = data[data.RTs == rt_max].index[0]
-    # Max RTs:
-    print("Le tweet avec le plus de retweets est : \n{}".format(data['tweet_textual_content'][rt]))
-    print("Avec un nombre de retweet : {}".format(rt_max))
-    print("{} characters.\n".format(data['len'][rt]))
-    return data
+    tweets1 = connexion.search("@EmmanuelMacron",language="fr",rpp=500)
+    data1 = pd.DataFrame(data=[tweet.text for tweet in tweets1], columns=['tweet_textual_content'])
+    data1['len']  = np.array([len(tweet.text) for tweet in tweets1])
+    data1['ID']   = np.array([tweet.id for tweet in tweets1])
+    data1['Date'] = np.array([tweet.created_at for tweet in tweets1])
+    data1['Source'] = np.array([tweet.source for tweet in tweets1])
+    data1['Likes']  = np.array([tweet.favorite_count for tweet in tweets1])
+    data1['RTs']    = np.array([tweet.retweet_count for tweet in tweets1])
 
+    tfav = pd.Series(data=data1['Likes'].values, index=data1['Date'])
+    tret = pd.Series(data=data1['RTs'].values, index=data1['Date'])
+    # Likes vs retweets visualization:
+    tfav.plot(figsize=(16,4), label="Likes", legend=True)
+    tret.plot(figsize=(16,4), label="Retweets", legend=True)
+    plt.show()
+    return data1
 
+def collect_tweets_by_Philippe():
+    connexion = twitter_setup()
+    tweets2 = connexion.search("@EdouardPhilippe",language="fr",rpp=500)
+    data2 = pd.DataFrame(data=[tweet.text for tweet in tweets2], columns=['tweet_textual_content'])
+    data2['len']  = np.array([len(tweet.text) for tweet in tweets2])
+    data2['ID']   = np.array([tweet.id for tweet in tweets2])
+    data2['Date'] = np.array([tweet.created_at for tweet in tweets2])
+    data2['Source'] = np.array([tweet.source for tweet in tweets2])
+    data2['Likes']  = np.array([tweet.favorite_count for tweet in tweets2])
+    data2['RTs']    = np.array([tweet.retweet_count for tweet in tweets2])
+    tfav = pd.Series(data=data2['Likes'].values, index=data2['Date'])
+    tret = pd.Series(data=data2['RTs'].values, index=data2['Date'])
+    # Likes vs retweets visualization:
+    tfav.plot(figsize=(16,4), label="Likes", legend=True)
+    tret.plot(figsize=(16,4), label="Retweets", legend=True)
+    plt.show()
+    return data2
 
-
-
+print(collect_tweets_by_Macron())
+print(collect_tweets_by_Philippe())
 
 
 
