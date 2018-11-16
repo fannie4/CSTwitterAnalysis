@@ -1,4 +1,10 @@
+import pandas as pd
 import tweepy
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+
+
 
 # We import our access keys:
 
@@ -9,6 +15,12 @@ CONSUMER_SECRET = 'aVcA7nuqLFc1CVb3uWCM4yEZYOP5qIjWHyOZ3fsZ3EOiqhoxnU'
 # Access:
 ACCESS_TOKEN  = '928109258-XDscdmCehF5ZRStwObVkFaTleR90q96nk5hJ3Zqh'
 ACCESS_SECRET = 'pJksbGMEPtjtkmAa2Yu4594dIdt5nrNrxCAhqCJOdQcRk'
+
+#on ouvre le fichier json
+with open('collected_tweet_1976143068.json')as json_data:
+    data_dict=json.load(json_data)
+    print(data_dict)
+
 
 
 def twitter_setup():
@@ -25,69 +37,113 @@ def twitter_setup():
     api = tweepy.API(auth)
     return api
 
-print(twitter_setup())
-
-//on collecte les tweets relatifs à Emmanuel Macron, dans lesquels il a été identifié
 def collect():
     connexion = twitter_setup()
     tweets = connexion.search("@EmmanuelMacron",language="french",rpp=50)
-    for tweet in tweets:
-        print(tweet.text)
-        
-print (collect())
+    return tweets
 
-//on collecte les tweets avec des mots clés relatifs au nom du candidat 
-//ouvre les fichiers et renvoie les mots clés dans une liste
-//le numéro du candidat est utile comme l'user_id
+"""print (collect())"""
 
-def get_candidate_queries(num_candidate,file_path):
-    connexion=twitter_setup
-    file_path = open("keywords_candidate_num_candidate.txt","hastag_candidate_num_candidate.txt", "r")
-    for words in file_path :
-        if user_id=14445328
-        tweets1= connexion.search("num_candidate") 
-        
-        print(tweets1)
-           
+"""on crér une fonction collet qui permet de transformer le fichier json en dataframe, en s'appuuant sur la fonction collect précdente qui renvoit une liste de tweets"""
+"""on rentre dans le dictionnaire et la clé du dictionnaire devient le numéro de la colonne"""
+"""on a un dataframe mais qu'il faut modifier pour l'avoir sous forme de tableau exploitable"""
+def collect_as_DF():
+    file=collect()
+    searched_tweets=[status._json for status in file]
+    json_file=json.dumps([object for object in searched_tweets])
+    """dumps: pour enregistrer"""
+    tweets=pd.read_json(json_file)
+    print(tweets)
 
+"""permet de créer le data frame de tweets et le renvoie sous forme de data (tableau à plusieurs colonnes"""
+"""les colonnes sont len, l'ID, le data, la source, les likes, et RT'S"""
 
-//On collecte les tweets des personnes qui ont parlé de cet user_id, et en renvoient 200
-def collect_by_user(user_id):
+def collect_to_pandas_dataframe():
     connexion = twitter_setup()
-    statuses = connexion.user_timeline(id = user_id, count = 200)
-    for status in statuses:
-        print(status.text)
-    return statuses
-    
+    tweets = connexion.search("@EmmanuelMacron",language="fr",rpp=100)
+    data = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweet_textual_content'])
+    data['len']  = np.array([len(tweet.text) for tweet in tweets])
+    data['ID']   = np.array([tweet.id for tweet in tweets])
+    data['Date'] = np.array([tweet.created_at for tweet in tweets])
+    data['Source'] = np.array([tweet.source for tweet in tweets])
+    data['Likes']  = np.array([tweet.favorite_count for tweet in tweets])
+    data['RTs']    = np.array([tweet.retweet_count for tweet in tweets])
+    rt_max  = np.max(data['RTs'])
+    rt  = data[data.RTs == rt_max].index[0]
+    # Max RTs:
+    print("Le tweet avec le plus de retweets est : \n{}".format(data['tweet_textual_content'][rt]))
+    print("Avec un nombre de retweet : {}".format(rt_max))
+    print("{} characters.\n".format(data['len'][rt]))
+    return data
 
-print (collect_by_user(151304840))
+'''print(collect_to_pandas_dataframe())'''
 
+"""renvoie la moyenne du nombre de retweet"""
+def mean_rt(df):
+    print ("Le nombre moyen de retweets est : ")
+    print(df['RTs'].mean())
 
+df=collect_to_pandas_dataframe()
 
-from tweepy.streaming import StreamListener
-class StdOutListener(StreamListener):
+'''print(mean_rt(df))'''
 
-    def on_data(self, data):
-        print(data)
-        return True
+"""renvoie la moyenne du nombre de likes par retweet"""
+def mean_likes_rt(df):
+    print("Le nombre moyen de likes est :")
 
-    def on_error(self, status):
-        if  str(status) == "420":
-            print(status)
-            print("You exceed a limited number of attempts to connect to the streaming API")
-            return False
-        else:
-            return True
+'''print(mean_likes_rt(df))'''
 
-//renvoie en continu et en temps réel les tweets qui sont publiés et qui concernent Macron
-def collect_by_streaming():
+def max_rt(df):
+    print("Le nombre max de likes est :")
+    print(df['RTs'].max())
+print(max_rt(df))
 
+"""tracé du nombre de retweets par tweet"""
+def plot_rt(df):
+    df["RTs"].plot()
+    plt.ylabel("Nombre de retweets pour chaque tweet")
+    plt.xlabel("Numéro du tweet")
+    plt.title("Nombre de retweets en fonction du numéro du tweet")
+    plt.show()
+
+'''print(plot_rt(df))'''
+
+#Fonctionnalité 6 : visualisation de l'évolution d'une caractéristique
+
+'''Exemple:'''
+tfav = pd.Series(data=df['Likes'].values, index=df['Date'])
+tret = pd.Series(data=df['RTs'].values, index=df['Date'])
+
+# Likes vs retweets visualization:
+tfav.plot(figsize=(16,4), label="Likes", legend=True)
+tret.plot(figsize=(16,4), label="Retweets", legend=True)
+
+print(plt.show())
+
+#On compare le nombre de retweet des posts d'Emmanuel Macron et ceux d'Edouard Philippe
+
+#première fonction qui renvoie les tweets postés par Emmanuel Macron
+def collect_tweets_by_Macron():
     connexion = twitter_setup()
-    listener = StdOutListener()
-    stream=tweepy.Stream(auth = connexion.auth, listener=listener)
-    stream.filter(track=['Emmanuel Macron'])
+    tweets = connexion.search(user = "EmmanuelMacron",language="fr",rpp=100)
+    data = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweet_textual_content'])
+    data['len']  = np.array([len(tweet.text) for tweet in tweets])
+    data['ID']   = np.array([tweet.id for tweet in tweets])
+    data['Date'] = np.array([tweet.created_at for tweet in tweets])
+    data['Source'] = np.array([tweet.source for tweet in tweets])
+    data['Likes']  = np.array([tweet.favorite_count for tweet in tweets])
+    data['RTs']    = np.array([tweet.retweet_count for tweet in tweets])
+    rt_max  = np.max(data['RTs'])
+    rt  = data[data.RTs == rt_max].index[0]
+    # Max RTs:
+    print("Le tweet avec le plus de retweets est : \n{}".format(data['tweet_textual_content'][rt]))
+    print("Avec un nombre de retweet : {}".format(rt_max))
+    print("{} characters.\n".format(data['len'][rt]))
+    return data
 
-print(collect_by_streaming)
+
+
+
 
 
 
